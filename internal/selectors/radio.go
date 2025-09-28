@@ -3,6 +3,7 @@ package selectors
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -10,8 +11,9 @@ import (
 )
 
 type RadioOptions struct {
-	Title       string
-	Description string
+	Title         string
+	Description   string
+	TextTransform TextTransform
 }
 
 func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, err error) {
@@ -21,8 +23,9 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	// optional param
 	if opts == nil {
 		opts = &RadioOptions{
-			Title:       "",
-			Description: "",
+			Title:         "",
+			Description:   "",
+			TextTransform: NONE,
 		}
 	}
 
@@ -34,7 +37,7 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	cursorPos := 0
 
 	for {
-		renderList(list, cursorPos, opts.Title, opts.Description)
+		renderList(list, cursorPos, opts.Title, opts.Description, opts.TextTransform)
 
 		oldState := utilities.EnterRawMode()
 
@@ -72,7 +75,7 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	return list[cursorPos], nil
 }
 
-func renderList[T AcceptedListType](list []T, cursorPos int, title string, desc string) {
+func renderList[T AcceptedListType](list []T, cursorPos int, title string, desc string, textTransform TextTransform) {
 	utilities.ClearTerminal()
 
 	if strings.TrimSpace(title) != "" {
@@ -83,11 +86,37 @@ func renderList[T AcceptedListType](list []T, cursorPos int, title string, desc 
 		fmt.Printf("%s\n\n", desc)
 	}
 
-	for i, v := range list {
-		if i == cursorPos {
-			fmt.Printf("> %v\n", v)
-		} else {
-			fmt.Printf("  %v\n", v)
+	listType, err := utilities.FindArrayType(list, true)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	if listType != "string" {
+		for i, v := range list {
+			moveCursor(i, cursorPos, fmt.Sprintf("%v\n", v))
 		}
+
+		return
+	}
+
+	for i, v := range list {
+		switch textTransform.String() {
+		case "uppercase":
+			moveCursor(i, cursorPos, strings.ToUpper(fmt.Sprintf("%v", v)))
+		case "lowercase":
+			moveCursor(i, cursorPos, strings.ToLower(fmt.Sprintf("%v", v)))
+		case "capitalise":
+			moveCursor(i, cursorPos, utilities.ToCapitalise(fmt.Sprintf("%v", v)))
+		default:
+			moveCursor(i, cursorPos, fmt.Sprintf("%v", v))
+		}
+	}
+}
+
+func moveCursor(index int, cursorPos int, s string) {
+	if index == cursorPos {
+		fmt.Printf("> %s\n", s)
+	} else {
+		fmt.Printf("  %s\n", s)
 	}
 }

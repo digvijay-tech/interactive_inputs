@@ -16,6 +16,13 @@ func init() {
 	}
 }
 
+const (
+	UPPERCASE  = selectors.UPPERCASE
+	LOWERCASE  = selectors.LOWERCASE
+	CAPITALISE = selectors.CAPITALISE
+	NONE       = selectors.NONE
+)
+
 type RadioOptions = selectors.RadioOptions
 
 func Radio[T selectors.AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, err error) {
