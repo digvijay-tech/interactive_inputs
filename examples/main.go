@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/digvijay-tech/interactive_inputs/inputs"
+	"github.com/digvijay-tech/interactive_inputs"
 )
 
 type hero struct {
@@ -24,19 +24,19 @@ func main() {
 	huntik["cherit"] = hero{"Cherit", "he is a titan ;)", "Soul Burn"}
 
 	seekers := []string{
-		"Dante",
-		"Lok",
-		"Sophie",
-		"Zhalia",
-		"Cherit",
+		// "Dante",
+		// "Lok",
+		// "Sophie",
+		// "Zhalia",
+		// "Cherit",
 	}
 
-	options := &inputs.RadioOptions{
+	options := &interactive_inputs.RadioOptions{
 		Title:       "Pick your seeker:",
 		Description: "Selected seeker comes with a titan and a spell.",
 	}
 
-	selectedSeeker, err := inputs.Radio(seekers, options)
+	selectedSeeker, err := interactive_inputs.Radio(seekers, options)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

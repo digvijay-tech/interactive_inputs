@@ -1,10 +1,12 @@
-package inputs
+package selectors
 
 import (
 	"errors"
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/digvijay-tech/interactive_inputs/internal/utilities"
 )
 
 type RadioOptions struct {
@@ -12,7 +14,10 @@ type RadioOptions struct {
 	Description string
 }
 
-func Radio[T acceptedListType](list []T, opts *RadioOptions) (selectedItem T, err error) {
+func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, err error) {
+	utilities.HideDefaultTerminalCursor()
+	defer utilities.ShowDefaultTerminalCursor()
+
 	// optional param
 	if opts == nil {
 		opts = &RadioOptions{
@@ -23,7 +28,7 @@ func Radio[T acceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 
 	if len(list) < 1 {
 		var zeroVal T
-		return zeroVal, errors.New("RadioList: list is empty")
+		return zeroVal, errors.New("list is empty")
 	}
 
 	cursorPos := 0
@@ -31,12 +36,12 @@ func Radio[T acceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	for {
 		renderList(list, cursorPos, opts.Title, opts.Description)
 
-		oldState := enterRawMode()
+		oldState := utilities.EnterRawMode()
 
 		byteArr := make([]byte, 3)
 		os.Stdin.Read(byteArr)
 
-		exitRawMode(oldState)
+		utilities.ExitRawMode(oldState)
 
 		if byteArr[0] == 3 || byteArr[0] == 13 {
 			break
@@ -67,8 +72,8 @@ func Radio[T acceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	return list[cursorPos], nil
 }
 
-func renderList[T acceptedListType](list []T, cursorPos int, title string, desc string) {
-	clearTerminal()
+func renderList[T AcceptedListType](list []T, cursorPos int, title string, desc string) {
+	utilities.ClearTerminal()
 
 	if strings.TrimSpace(title) != "" {
 		fmt.Println(title)

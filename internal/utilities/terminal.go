@@ -1,6 +1,7 @@
-package inputs
+package utilities
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -9,7 +10,7 @@ import (
 	"golang.org/x/term"
 )
 
-func clearTerminal() {
+func ClearTerminal() {
 	var cmd *exec.Cmd
 
 	if runtime.GOOS == "windows" {
@@ -22,7 +23,7 @@ func clearTerminal() {
 	cmd.Run()
 }
 
-func enterRawMode() (oldState *term.State) {
+func EnterRawMode() (oldState *term.State) {
 	currentState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -31,6 +32,9 @@ func enterRawMode() (oldState *term.State) {
 	return currentState
 }
 
-func exitRawMode(oldState *term.State) {
+func ExitRawMode(oldState *term.State) {
 	term.Restore(int(os.Stdin.Fd()), oldState)
 }
+
+func HideDefaultTerminalCursor() { fmt.Print("\033[?25l") }
+func ShowDefaultTerminalCursor() { fmt.Print("\033[?25h") }
