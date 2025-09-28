@@ -38,3 +38,7 @@ func ExitRawMode(oldState *term.State) {
 
 func HideDefaultTerminalCursor() { fmt.Print("\033[?25l") }
 func ShowDefaultTerminalCursor() { fmt.Print("\033[?25h") }
+
+func IsTerminalCapable() bool {
+	return term.IsTerminal(int(os.Stdin.Fd()))
+}

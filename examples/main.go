@@ -24,11 +24,11 @@ func main() {
 	huntik["cherit"] = hero{"Cherit", "he is a titan ;)", "Soul Burn"}
 
 	seekers := []string{
-		// "Dante",
-		// "Lok",
-		// "Sophie",
-		// "Zhalia",
-		// "Cherit",
+		"Dante",
+		"Lok",
+		"Sophie",
+		"Zhalia",
+		"Cherit",
 	}
 
 	options := &interactive_inputs.RadioOptions{
