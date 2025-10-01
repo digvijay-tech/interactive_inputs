@@ -22,11 +22,7 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 
 	// optional param
 	if opts == nil {
-		opts = &RadioOptions{
-			Title:         "",
-			Description:   "",
-			TextTransform: NONE,
-		}
+		opts = &RadioOptions{TextTransform: NONE}
 	}
 
 	if len(list) < 1 {
@@ -46,10 +42,17 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 
 		utilities.ExitRawMode(oldState)
 
-		if byteArr[0] == 3 || byteArr[0] == 13 {
+		// ctrl+c
+		if byteArr[0] == 3 {
 			break
 		}
 
+		// enter
+		if byteArr[0] == 13 {
+			break
+		}
+
+		// up/down arrow
 		if byteArr[0] == 27 && byteArr[1] == 91 {
 			switch byteArr[2] {
 			case 65:
@@ -86,14 +89,14 @@ func renderList[T AcceptedListType](list []T, cursorPos int, title string, desc 
 		fmt.Printf("%s\n\n", desc)
 	}
 
-	listType, err := utilities.FindArrayType(list, true)
-	if err != nil {
-		log.Fatalln(err.Error())
+	listType := utilities.FindType(list, true)
+	if listType == "" {
+		log.Fatalln("invalid list type")
 	}
 
 	if listType != "string" {
 		for i, v := range list {
-			moveCursor(i, cursorPos, fmt.Sprintf("%v\n", v))
+			moveCursor(i, cursorPos, fmt.Sprintf("%v", v))
 		}
 
 		return

@@ -28,3 +28,9 @@ type RadioOptions = selectors.RadioOptions
 func Radio[T selectors.AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, err error) {
 	return selectors.Radio(list, opts)
 }
+
+type CheckboxOptions = selectors.CheckboxOptions
+
+func Checkbox[T selectors.AcceptedListType](list []T, opts *CheckboxOptions) (selectedItems []T, err error) {
+	return selectors.Checkbox(list, opts)
+}

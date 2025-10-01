@@ -34,7 +34,7 @@ func main() {
 	options := &interactive_inputs.RadioOptions{
 		Title:         "Pick your seeker:",
 		Description:   "Selected seeker comes with a titan and a spell.",
-		TextTransform: interactive_inputs.CAPITALISE,
+		TextTransform: interactive_inputs.NONE,
 	}
 
 	selectedSeeker, err := interactive_inputs.Radio(seekers, options)

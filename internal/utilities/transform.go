@@ -1,23 +1,27 @@
 package utilities
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 )
 
-func FindArrayType[T any](list []T, removeBrackets bool) (string, error) {
-	result := reflect.TypeOf(list)
+/*
+Returns the tyoe of x, if x is an array/slice it will return type prefixed with '[]', You can set second argument removeBrackets to true if you prefer to
+remove '[]' from the return value for array/slice types.
+If x is nil interface value this function will return an empty string ""
+*/
+func FindType[T any](x T, removeBrackets bool) string {
+	result := reflect.TypeOf(x)
 
 	if result == nil {
-		return "", fmt.Errorf("provided list type %v is invalid", result)
+		return ""
 	}
 
 	if removeBrackets {
-		return strings.TrimPrefix(result.String(), "[]"), nil
+		return strings.TrimPrefix(result.String(), "[]")
 	}
 
-	return result.String(), nil
+	return result.String()
 }
 
 func ToCapitalise(s string) string {
