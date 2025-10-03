@@ -27,11 +27,14 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 	utilities.HideDefaultTerminalCursor()
 	defer utilities.ShowDefaultTerminalCursor()
 
-	// default params
-	if opts == nil {
+	// override options
+	if opts == nil || opts.MaxSelection == 0 || opts.MaxSelection > uint(len(list)) {
 		opts = &CheckboxOptions{
+			Title:         opts.Title,
+			Description:   opts.Description,
+			MinSelection:  opts.MinSelection,
 			MaxSelection:  uint(len(list)),
-			TextTransform: NONE,
+			TextTransform: opts.TextTransform,
 		}
 	}
 
@@ -42,7 +45,7 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 	}
 
 	if opts.MinSelection > uint(len(list)) {
-		return zeroVal, errors.New("MinSelection cannot be greater than the list length")
+		return zeroVal, errors.New("MinSelection cannot be greater than the list")
 	}
 
 	var decoratedItems []checkboxItem[T]
@@ -79,12 +82,12 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 
 		// spacebar
 		if byteArr[0] == 32 {
-			if decoratedItems[cursorPos].checked {
-				decoratedItems[cursorPos].checked = false
-				checkedCount--
-			} else {
+			if !decoratedItems[cursorPos].checked && uint(checkedCount) < opts.MaxSelection {
 				decoratedItems[cursorPos].checked = true
 				checkedCount++
+			} else if decoratedItems[cursorPos].checked {
+				decoratedItems[cursorPos].checked = false
+				checkedCount--
 			}
 
 			continue
