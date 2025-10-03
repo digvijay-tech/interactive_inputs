@@ -35,9 +35,14 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 		}
 	}
 
+	var zeroVal []T
+
 	if len(list) < 1 {
-		var zeroVal []T
 		return zeroVal, errors.New("list is empty")
+	}
+
+	if opts.MinSelection > uint(len(list)) {
+		return zeroVal, errors.New("MinSelection cannot be greater than the list length")
 	}
 
 	var decoratedItems []checkboxItem[T]
@@ -50,6 +55,7 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 	}
 
 	cursorPos := 0
+	checkedCount := 0
 
 	for {
 		renderDecoratedList(decoratedItems, cursorPos, opts.Title, opts.Description, opts.TextTransform)
@@ -66,8 +72,8 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 			break
 		}
 
-		// enter -> TODO: add logic for minimum selection when option is set
-		if byteArr[0] == 13 {
+		// enter
+		if byteArr[0] == 13 && checkedCount >= int(opts.MinSelection) {
 			break
 		}
 
@@ -75,8 +81,10 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 		if byteArr[0] == 32 {
 			if decoratedItems[cursorPos].checked {
 				decoratedItems[cursorPos].checked = false
+				checkedCount--
 			} else {
 				decoratedItems[cursorPos].checked = true
+				checkedCount++
 			}
 
 			continue
