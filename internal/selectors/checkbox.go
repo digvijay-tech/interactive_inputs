@@ -152,7 +152,7 @@ func renderDecoratedList[T AcceptedListType](decoratedList []checkboxItem[T], cu
 		case "uppercase":
 			moveCursor(i, cursorPos, icon+" "+strings.ToUpper(fmt.Sprintf("%v", v.item)))
 		case "lowercase":
-			moveCursor(i, cursorPos, icon+" "+strings.ToUpper(fmt.Sprintf("%v", v.item)))
+			moveCursor(i, cursorPos, icon+" "+strings.ToLower(fmt.Sprintf("%v", v.item)))
 		case "capitalise":
 			moveCursor(i, cursorPos, icon+" "+utilities.ToCapitalise(fmt.Sprintf("%v", v.item)))
 		default:
