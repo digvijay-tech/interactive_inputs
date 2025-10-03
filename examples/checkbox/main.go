@@ -31,6 +31,6 @@ func main() {
 
 	fmt.Println("Your team:")
 	for _, v := range team {
-		fmt.Printf("- %s\n", v)
+		fmt.Printf("- %v\n", v)
 	}
 }

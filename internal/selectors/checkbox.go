@@ -130,6 +130,9 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 func renderDecoratedList[T AcceptedListType](decoratedList []checkboxItem[T], cursorPos int, title string, desc string, textTransform TextTransform) {
 	utilities.ClearTerminal()
 
+	// default unchecked icon
+	var icon = "○"
+
 	if strings.TrimSpace(title) != "" {
 		fmt.Println(title)
 	}
@@ -145,14 +148,18 @@ func renderDecoratedList[T AcceptedListType](decoratedList []checkboxItem[T], cu
 
 	if listType != "string" {
 		for i, v := range decoratedList {
-			moveCursor(i, cursorPos, fmt.Sprintf("%v", v.item))
+			if v.checked {
+				icon = "●"
+			}
+
+			moveCursor(i, cursorPos, icon+" "+fmt.Sprintf("%v", v.item))
+
+			// reset for next iteration
+			icon = "○"
 		}
 
 		return
 	}
-
-	// default unchecked icon
-	var icon = "○"
 
 	for i, v := range decoratedList {
 		if v.checked {
