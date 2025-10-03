@@ -16,9 +16,17 @@ type RadioOptions struct {
 	TextTransform TextTransform
 }
 
+// TODO: complete scrolling
 func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, err error) {
 	utilities.HideDefaultTerminalCursor()
 	defer utilities.ShowDefaultTerminalCursor()
+
+	_, winHeight := utilities.GetWindowSize()
+	enableScroll := false
+
+	if winHeight-len(list) <= 0 || len(list) > 15 {
+		enableScroll = true
+	}
 
 	// optional param
 	if opts == nil {
@@ -33,7 +41,7 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	cursorPos := 0
 
 	for {
-		renderList(list, cursorPos, opts.Title, opts.Description, opts.TextTransform)
+		renderList(list, cursorPos, opts.Title, opts.Description, opts.TextTransform, enableScroll)
 
 		oldState := utilities.EnterRawMode()
 
@@ -56,17 +64,17 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 		if byteArr[0] == 27 && byteArr[1] == 91 {
 			switch byteArr[2] {
 			case 65:
-				if cursorPos <= 0 {
+				if cursorPos <= 0 && !enableScroll {
 					cursorPos = len(list) - 1
-				} else {
+				} else if cursorPos > 0 {
 					cursorPos -= 1
 				}
 
 				continue
 			case 66:
-				if cursorPos >= len(list)-1 {
+				if cursorPos >= len(list)-1 && !enableScroll {
 					cursorPos = 0
-				} else {
+				} else if cursorPos < len(list)-1 {
 					cursorPos += 1
 				}
 
@@ -78,7 +86,7 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	return list[cursorPos], nil
 }
 
-func renderList[T AcceptedListType](list []T, cursorPos int, title string, desc string, textTransform TextTransform) {
+func renderList[T AcceptedListType](list []T, cursorPos int, title string, desc string, textTransform TextTransform, enableScroll bool) {
 	utilities.ClearTerminal()
 
 	if strings.TrimSpace(title) != "" {
@@ -95,13 +103,25 @@ func renderList[T AcceptedListType](list []T, cursorPos int, title string, desc 
 	}
 
 	if listType != "string" {
+		if enableScroll && cursorPos > 0 {
+			fmt.Println("\u2191")
+		}
 		for i, v := range list {
 			moveCursor(i, cursorPos, fmt.Sprintf("%v", v))
+		}
+
+		if enableScroll && cursorPos < len(list) {
+			fmt.Println("\u2193")
 		}
 
 		return
 	}
 
+	if enableScroll && cursorPos > 0 {
+		fmt.Println("\u2191")
+	} else {
+		fmt.Println("")
+	}
 	for i, v := range list {
 		switch textTransform.String() {
 		case "uppercase":
@@ -113,6 +133,9 @@ func renderList[T AcceptedListType](list []T, cursorPos int, title string, desc 
 		default:
 			moveCursor(i, cursorPos, fmt.Sprintf("%v", v))
 		}
+	}
+	if enableScroll && cursorPos < len(list)-1 {
+		fmt.Println("\u2193")
 	}
 }
 

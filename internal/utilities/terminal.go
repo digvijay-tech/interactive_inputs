@@ -10,6 +10,16 @@ import (
 	"golang.org/x/term"
 )
 
+// Returns width and height of current termminal window, if it fails for any reason it will return (0,0) instead.
+func GetWindowSize() (width, height int) {
+	w, h, err := term.GetSize(0)
+	if err != nil {
+		return 0, 0
+	}
+
+	return w, h
+}
+
 func ClearTerminal() {
 	var cmd *exec.Cmd
 
