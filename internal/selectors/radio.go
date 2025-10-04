@@ -52,7 +52,8 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 
 		// ctrl+c
 		if byteArr[0] == 3 {
-			break
+			var zeroval T
+			return zeroval, nil
 		}
 
 		// enter
