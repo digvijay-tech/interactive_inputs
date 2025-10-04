@@ -21,7 +21,7 @@ func main() {
 		Description:   "It's time for a team up.",
 		TextTransform: interactive_inputs.CAPITALISE,
 		MinSelection:  1,
-		MaxSelection:  3,
+		MaxSelection:  2,
 	}
 
 	team, err := interactive_inputs.Checkbox(seekers, options)

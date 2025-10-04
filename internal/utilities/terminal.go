@@ -33,7 +33,14 @@ func ClearTerminal() {
 	cmd.Run()
 }
 
-func EnterRawMode() (oldState *term.State) {
+// It reads keyboard input directly into the provided byte slice, changing its content.
+func RecordKeyStroke(byteArr []byte) {
+	oldState := enterRawMode()
+	os.Stdin.Read(byteArr)
+	exitRawMode(oldState)
+}
+
+func enterRawMode() (oldState *term.State) {
 	currentState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -42,7 +49,7 @@ func EnterRawMode() (oldState *term.State) {
 	return currentState
 }
 
-func ExitRawMode(oldState *term.State) {
+func exitRawMode(oldState *term.State) {
 	term.Restore(int(os.Stdin.Fd()), oldState)
 }
 
@@ -51,4 +58,31 @@ func ShowDefaultTerminalCursor() { fmt.Print("\033[?25h") }
 
 func IsTerminalCapable() bool {
 	return term.IsTerminal(int(os.Stdin.Fd()))
+}
+
+/************** IDENTIFYING KEYSTRONG **************/
+
+// Returns true if byte array evaluates to enter keystroke
+func IsEnter(byteArr []byte) bool {
+	return byteArr[0] == 13
+}
+
+// Returns true if byte array evaluates to Ctrl+c keystroke
+func IsCtrlC(byteArr []byte) bool {
+	return byteArr[0] == 3
+}
+
+// Returns true if byte array evaluates to up arrow keystroke
+func IsUpArrow(byteArr []byte) bool {
+	return byteArr[0] == 27 && byteArr[1] == 91 && byteArr[2] == 65
+}
+
+// Returns true if byte array evaluates to down arrow keystroke
+func IsDownArrow(byteArr []byte) bool {
+	return byteArr[0] == 27 && byteArr[1] == 91 && byteArr[2] == 66
+}
+
+// Returns true if byte array evaluates to spacebar keystroke
+func IsSpacebar(byteArr []byte) bool {
+	return byteArr[0] == 32
 }

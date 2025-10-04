@@ -2,10 +2,6 @@ package selectors
 
 import (
 	"errors"
-	"fmt"
-	"log"
-	"os"
-	"strings"
 
 	"github.com/digvijay-tech/interactive_inputs/internal/utilities"
 )
@@ -17,6 +13,8 @@ type CheckboxOptions struct {
 	MaxSelection  uint
 	TextTransform TextTransform
 }
+
+func (cbo CheckboxOptions) GetType() string { return "CHECKBOX" }
 
 type checkboxItem[T AcceptedListType] struct {
 	item    T
@@ -60,28 +58,22 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 	cursorPos := 0
 	checkedCount := 0
 
+	byteArr := make([]byte, 3)
+
 	for {
-		renderDecoratedList(decoratedItems, cursorPos, opts.Title, opts.Description, opts.TextTransform)
+		renderCheckboxItems(decoratedItems, cursorPos, *opts)
 
-		oldState := utilities.EnterRawMode()
+		utilities.RecordKeyStroke(byteArr)
 
-		byteArr := make([]byte, 3)
-		os.Stdin.Read(byteArr)
+		if utilities.IsCtrlC(byteArr) {
+			return zeroVal, nil
+		}
 
-		utilities.ExitRawMode(oldState)
-
-		// ctrl+c
-		if byteArr[0] == 3 {
+		if utilities.IsEnter(byteArr) && checkedCount >= int(opts.MinSelection) {
 			break
 		}
 
-		// enter
-		if byteArr[0] == 13 && checkedCount >= int(opts.MinSelection) {
-			break
-		}
-
-		// spacebar
-		if byteArr[0] == 32 {
+		if utilities.IsSpacebar(byteArr) {
 			if !decoratedItems[cursorPos].checked && uint(checkedCount) < opts.MaxSelection {
 				decoratedItems[cursorPos].checked = true
 				checkedCount++
@@ -93,26 +85,24 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 			continue
 		}
 
-		// up/down arrow
-		if byteArr[0] == 27 && byteArr[1] == 91 {
-			switch byteArr[2] {
-			case 65:
-				if cursorPos <= 0 {
-					cursorPos = len(list) - 1
-				} else {
-					cursorPos -= 1
-				}
-
-				continue
-			case 66:
-				if cursorPos >= len(list)-1 {
-					cursorPos = 0
-				} else {
-					cursorPos += 1
-				}
-
-				continue
+		if utilities.IsUpArrow(byteArr) {
+			if cursorPos <= 0 {
+				cursorPos = len(list) - 1
+			} else {
+				cursorPos -= 1
 			}
+
+			continue
+		}
+
+		if utilities.IsDownArrow(byteArr) {
+			if cursorPos >= len(list)-1 {
+				cursorPos = 0
+			} else {
+				cursorPos += 1
+			}
+
+			continue
 		}
 	}
 
@@ -127,57 +117,12 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 	return selected, nil
 }
 
-func renderDecoratedList[T AcceptedListType](decoratedList []checkboxItem[T], cursorPos int, title string, desc string, textTransform TextTransform) {
+func renderCheckboxItems[T AcceptedListType](decoratedList []checkboxItem[T], cursorPos int, opts CheckboxOptions) {
 	utilities.ClearTerminal()
 
-	// default unchecked icon
-	var icon = "○"
-
-	if strings.TrimSpace(title) != "" {
-		fmt.Println(title)
-	}
-
-	if strings.TrimSpace(desc) != "" {
-		fmt.Printf("%s\n\n", desc)
-	}
-
-	listType := utilities.FindType(decoratedList[0].item, false)
-	if listType == "" {
-		log.Fatalln("invalid list type")
-	}
-
-	if listType != "string" {
-		for i, v := range decoratedList {
-			if v.checked {
-				icon = "●"
-			}
-
-			moveCursor(i, cursorPos, icon+" "+fmt.Sprintf("%v", v.item))
-
-			// reset for next iteration
-			icon = "○"
-		}
-
-		return
-	}
+	displayTitleAndDesc(opts.Title, opts.Description)
 
 	for i, v := range decoratedList {
-		if v.checked {
-			icon = "●"
-		}
-
-		switch textTransform.String() {
-		case "uppercase":
-			moveCursor(i, cursorPos, icon+" "+strings.ToUpper(fmt.Sprintf("%v", v.item)))
-		case "lowercase":
-			moveCursor(i, cursorPos, icon+" "+strings.ToLower(fmt.Sprintf("%v", v.item)))
-		case "capitalise":
-			moveCursor(i, cursorPos, icon+" "+utilities.ToCapitalise(fmt.Sprintf("%v", v.item)))
-		default:
-			moveCursor(i, cursorPos, fmt.Sprintf("%s %v", icon, v.item))
-		}
-
-		// reset for next iteration
-		icon = "○"
+		moveCursor(i, cursorPos, v.item, opts.TextTransform, opts.GetType(), v.checked)
 	}
 }

@@ -24,7 +24,27 @@ func FindType[T any](x T, removeBrackets bool) string {
 	return result.String()
 }
 
-func ToCapitalise(s string) string {
+/*
+Transforms given text by applying transformations such as uppercase, lowercase or capitalise.
+If transformation string matches none it will return the original string.
+*/
+func TextTransform(transformation, text string) string {
+	if transformation == "uppercase" {
+		return strings.ToUpper(text)
+	}
+
+	if transformation == "lowercase" {
+		return strings.ToLower(text)
+	}
+
+	if transformation == "capitalise" {
+		return toCapitalise(text)
+	}
+
+	return text
+}
+
+func toCapitalise(s string) string {
 	clean := strings.TrimSpace(s)
 
 	if clean == "" {
