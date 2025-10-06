@@ -14,7 +14,6 @@ type RadioOptions struct {
 
 func (ro RadioOptions) GetType() string { return "RADIO" }
 
-// TODO: complete scrolling
 func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, err error) {
 	utilities.HideDefaultTerminalCursor()
 	defer utilities.ShowDefaultTerminalCursor()
@@ -22,7 +21,7 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	_, winHeight := utilities.GetWindowSize()
 	enableScroll := false
 
-	if winHeight-len(list) <= 0 || len(list) > 15 {
+	if winHeight-len(list) <= 5 || len(list) > 10 {
 		enableScroll = true
 	}
 
@@ -37,12 +36,20 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 		return zeroVal, errors.New("list is empty")
 	}
 
-	cursorPos := 0
-
 	byteArr := make([]byte, 3)
 
+	cursorPos, scrollingCursorPos := 0, 0
+	var paginatedList []T
+	itemsPerPage := 10
+
+	if enableScroll {
+		paginatedList = append(paginatedList, list[:itemsPerPage]...)
+	} else {
+		paginatedList = list
+	}
+
 	for {
-		renderRadioItems(list, cursorPos, *opts)
+		renderRadioItems(paginatedList, cursorPos, *opts)
 
 		utilities.RecordKeyStroke(byteArr)
 
@@ -55,27 +62,65 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 		}
 
 		if utilities.IsUpArrow(byteArr) {
-			if cursorPos <= 0 && !enableScroll {
-				cursorPos = len(list) - 1
-			} else if cursorPos > 0 {
+			// scrolling is disabled
+			if !enableScroll {
+				if cursorPos <= 0 {
+					cursorPos = len(paginatedList) - 1
+				} else {
+					cursorPos -= 1
+				}
+
+				continue
+			}
+
+			// scrolling is enabled
+			if cursorPos > 0 && scrollingCursorPos > 0 {
 				cursorPos -= 1
+				scrollingCursorPos -= 1
+			} else if cursorPos == 0 && scrollingCursorPos > 0 {
+				paginatedList = append([]T{}, paginatedList[:itemsPerPage-1]...)
+				paginatedList = append([]T{list[scrollingCursorPos-1]}, paginatedList...)
+				cursorPos = 0
+				scrollingCursorPos -= 1
+			} else {
+				cursorPos = 0
+				scrollingCursorPos = 0
 			}
 
 			continue
 		}
 
 		if utilities.IsDownArrow(byteArr) {
-			if cursorPos >= len(list)-1 && !enableScroll {
-				cursorPos = 0
-			} else if cursorPos < len(list)-1 {
+			// scrolling is disabled
+			if !enableScroll {
+				if cursorPos >= len(paginatedList)-1 {
+					cursorPos = 0
+				} else {
+					cursorPos += 1
+				}
+
+				continue
+			}
+
+			// scrolling is enabled
+			if cursorPos < len(paginatedList)-1 && scrollingCursorPos < len(list)-1 {
 				cursorPos += 1
+				scrollingCursorPos += 1
+			} else if cursorPos == len(paginatedList)-1 && scrollingCursorPos < len(list)-1 {
+				paginatedList = append(paginatedList, list[scrollingCursorPos+1])
+				paginatedList = append([]T{}, paginatedList[1:]...)
+				cursorPos = len(paginatedList) - 1
+				scrollingCursorPos += 1
+			} else {
+				cursorPos = len(paginatedList) - 1
+				scrollingCursorPos = len(list) - 1
 			}
 
 			continue
 		}
 	}
 
-	return list[cursorPos], nil
+	return paginatedList[cursorPos], nil
 }
 
 func renderRadioItems[T AcceptedListType](list []T, cursorPos int, opts RadioOptions) {
