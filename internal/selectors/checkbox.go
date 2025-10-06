@@ -25,6 +25,13 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 	utilities.HideDefaultTerminalCursor()
 	defer utilities.ShowDefaultTerminalCursor()
 
+	_, winHeight := utilities.GetWindowSize()
+	enableScroll := false
+
+	if winHeight-len(list) <= 5 || len(list) > 10 {
+		enableScroll = true
+	}
+
 	// override options
 	if opts == nil || opts.MaxSelection == 0 || opts.MaxSelection > uint(len(list)) {
 		opts = &CheckboxOptions{
@@ -55,13 +62,20 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 		})
 	}
 
-	cursorPos := 0
-	checkedCount := 0
-
 	byteArr := make([]byte, 3)
 
+	cursorPos, scrollingCursorPos, checkedCount := 0, 0, 0
+	var paginatedList []checkboxItem[T]
+	itemsPerPage := 10
+
+	if enableScroll {
+		paginatedList = append(paginatedList, decoratedItems[:itemsPerPage]...)
+	} else {
+		paginatedList = decoratedItems
+	}
+
 	for {
-		renderCheckboxItems(decoratedItems, cursorPos, *opts)
+		renderCheckboxItems(paginatedList, cursorPos, *opts)
 
 		utilities.RecordKeyStroke(byteArr)
 
@@ -74,11 +88,26 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 		}
 
 		if utilities.IsSpacebar(byteArr) {
-			if !decoratedItems[cursorPos].checked && uint(checkedCount) < opts.MaxSelection {
-				decoratedItems[cursorPos].checked = true
+			// scrolling is disabled
+			if !enableScroll {
+				if !decoratedItems[cursorPos].checked && uint(checkedCount) < opts.MaxSelection {
+					decoratedItems[cursorPos].checked = true
+					checkedCount++
+				} else if decoratedItems[cursorPos].checked {
+					decoratedItems[cursorPos].checked = false
+					checkedCount--
+				}
+
+				continue
+			}
+
+			if !decoratedItems[scrollingCursorPos].checked && uint(checkedCount) < opts.MaxSelection {
+				decoratedItems[scrollingCursorPos].checked = true
+				paginatedList[cursorPos].checked = true
 				checkedCount++
-			} else if decoratedItems[cursorPos].checked {
-				decoratedItems[cursorPos].checked = false
+			} else if decoratedItems[scrollingCursorPos].checked {
+				decoratedItems[scrollingCursorPos].checked = false
+				paginatedList[cursorPos].checked = false
 				checkedCount--
 			}
 
@@ -86,20 +115,58 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 		}
 
 		if utilities.IsUpArrow(byteArr) {
-			if cursorPos <= 0 {
-				cursorPos = len(list) - 1
-			} else {
+			// scrolling is disabled
+			if !enableScroll {
+				if cursorPos <= 0 {
+					cursorPos = len(paginatedList) - 1
+				} else {
+					cursorPos -= 1
+				}
+
+				continue
+			}
+
+			// scrolling is enabled
+			if cursorPos > 0 && scrollingCursorPos > 0 {
 				cursorPos -= 1
+				scrollingCursorPos -= 1
+			} else if cursorPos == 0 && scrollingCursorPos > 0 {
+				paginatedList = append([]checkboxItem[T]{}, paginatedList[:itemsPerPage-1]...)
+				paginatedList = append([]checkboxItem[T]{decoratedItems[scrollingCursorPos-1]}, paginatedList...)
+				cursorPos = 0
+				scrollingCursorPos -= 1
+			} else {
+				cursorPos = 0
+				scrollingCursorPos = 0
 			}
 
 			continue
 		}
 
 		if utilities.IsDownArrow(byteArr) {
-			if cursorPos >= len(list)-1 {
-				cursorPos = 0
-			} else {
+			// scrolling is disabled
+			if !enableScroll {
+				if cursorPos >= len(paginatedList)-1 {
+					cursorPos = 0
+				} else {
+					cursorPos += 1
+				}
+
+				continue
+			}
+
+			// scrolling is enabled
+			if cursorPos < len(paginatedList)-1 && scrollingCursorPos < len(decoratedItems)-1 {
 				cursorPos += 1
+				scrollingCursorPos += 1
+			} else if cursorPos == len(paginatedList)-1 && scrollingCursorPos < len(decoratedItems)-1 {
+				paginatedList = append(paginatedList, decoratedItems[scrollingCursorPos+1])
+				paginatedList = append([]checkboxItem[T]{}, paginatedList[1:]...)
+				cursorPos = len(paginatedList) - 1
+				scrollingCursorPos += 1
+			} else {
+				cursorPos = len(paginatedList) - 1
+				scrollingCursorPos = len(decoratedItems) - 1
 			}
 
 			continue
