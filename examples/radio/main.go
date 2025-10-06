@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/digvijay-tech/interactive_inputs"
 )
@@ -22,16 +23,12 @@ func main() {
 	huntik["zhalia"] = hero{"Zhalia", "Garion", "Simple Mind"}
 	huntik["cherit"] = hero{"Cherit", "he is a titan ;)", "Soul Burn"}
 
-	// seekers := []string{
-	// 	"dante",
-	// 	"loK",
-	// 	"sophie",
-	// 	"zhalia",
-	// 	"cherit",
-	// }
-
-	seekers := []int{
-		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+	seekers := []string{
+		"dante",
+		"loK",
+		"sophie",
+		"zhalia",
+		"cherit",
 	}
 
 	options := &interactive_inputs.RadioOptions{
@@ -47,6 +44,6 @@ func main() {
 
 	fmt.Println("You Chose:", selectedSeeker)
 
-	// seeker := huntik[strings.ToLower(selectedSeeker)]
-	// fmt.Printf("\nName: %s\nFirst Titan: %s\nSpell: %s\n", seeker.name, seeker.titan, seeker.spell)
+	seeker := huntik[strings.ToLower(selectedSeeker)]
+	fmt.Printf("\nName: %s\nFirst Titan: %s\nSpell: %s\n", seeker.name, seeker.titan, seeker.spell)
 }
