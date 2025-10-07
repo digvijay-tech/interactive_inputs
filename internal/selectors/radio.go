@@ -49,7 +49,7 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	}
 
 	for {
-		renderRadioItems(paginatedList, cursorPos, *opts)
+		renderRadioItems(paginatedList, cursorPos, scrollingCursorPos, len(list), enableScroll, *opts)
 
 		utilities.RecordKeyStroke(byteArr)
 
@@ -123,12 +123,20 @@ func Radio[T AcceptedListType](list []T, opts *RadioOptions) (selectedItem T, er
 	return paginatedList[cursorPos], nil
 }
 
-func renderRadioItems[T AcceptedListType](list []T, cursorPos int, opts RadioOptions) {
+func renderRadioItems[T AcceptedListType](list []T, cursorPos int, scrollingCursorPos int, arraySize int, enableScroll bool, opts RadioOptions) {
 	utilities.ClearTerminal()
 
 	displayTitleAndDesc(opts.Title, opts.Description)
 
+	if enableScroll {
+		displayScrollIndicator(1, scrollingCursorPos, arraySize)
+	}
+
 	for i, v := range list {
 		moveCursor(i, cursorPos, v, opts.TextTransform, opts.GetType(), false) // selected will always be false for radio
+	}
+
+	if enableScroll {
+		displayScrollIndicator(-1, scrollingCursorPos, arraySize)
 	}
 }

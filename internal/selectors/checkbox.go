@@ -75,7 +75,7 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 	}
 
 	for {
-		renderCheckboxItems(paginatedList, cursorPos, *opts)
+		renderCheckboxItems(paginatedList, cursorPos, scrollingCursorPos, len(list), enableScroll, *opts)
 
 		utilities.RecordKeyStroke(byteArr)
 
@@ -184,12 +184,20 @@ func Checkbox[T AcceptedListType](list []T, opts *CheckboxOptions) (selectedItem
 	return selected, nil
 }
 
-func renderCheckboxItems[T AcceptedListType](decoratedList []checkboxItem[T], cursorPos int, opts CheckboxOptions) {
+func renderCheckboxItems[T AcceptedListType](decoratedList []checkboxItem[T], cursorPos int, scrollingCursorPos int, arraySize int, enableScroll bool, opts CheckboxOptions) {
 	utilities.ClearTerminal()
 
 	displayTitleAndDesc(opts.Title, opts.Description)
 
+	if enableScroll {
+		displayScrollIndicator(1, scrollingCursorPos, arraySize)
+	}
+
 	for i, v := range decoratedList {
 		moveCursor(i, cursorPos, v.item, opts.TextTransform, opts.GetType(), v.checked)
+	}
+
+	if enableScroll {
+		displayScrollIndicator(-1, scrollingCursorPos, arraySize)
 	}
 }

@@ -53,3 +53,25 @@ func displayTitleAndDesc(title, desc string) {
 		fmt.Printf("%s\n\n", desc)
 	}
 }
+
+// Display scroll indicating arrow for either up or down, 'orientation' can be "1" for up arrow and "-1"
+// for down arrow. 'position' is the cursor position of main array/slice and 'arraySize' is the length of
+// main array/slice.
+func displayScrollIndicator(orientation int8, position int, arraySize int) {
+	switch orientation {
+	case 1:
+		if position > 0 {
+			fmt.Println(UPARROW_ICON)
+			return
+		}
+
+		fmt.Printf("\n")
+	case -1:
+		if position < arraySize-1 {
+			fmt.Println(DOWNARROW_ICON)
+			return
+		}
+
+		fmt.Printf("\n")
+	}
+}
